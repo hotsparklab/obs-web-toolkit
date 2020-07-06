@@ -102,3 +102,9 @@ dist
 
 # TernJS port file
 .tern-port
+
+# Ignore epic player audio files
+src/modules/epic-player/audio/*
+
+# mac files
+.DS_Store

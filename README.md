@@ -6,16 +6,46 @@ The included server accepts REST requests from programs such as VoiceAttack, tri
 
 ## Features
 
-### DMCA-Compliant Music Mood Player (current focus)
+### "Epic Player" (current focus)
 
-Play music playlists of local audio files triggered by VoiceAttack to set the mood of a live stream.
+Play music playlists of local audio files in an OBS overlay, triggered by VoiceAttack (or other app) to set the mood of a live stream.
 
 Examples (all configured to taste):
 
-- Say "red alert" to quickly transition audio to battle music with an initial alert sound.
+- Say "red alert" to quickly transition audio to battle music with an initial optional alert sound.
 - Say "engage jump drive" to slowly fade to serine exploration music.
 
 Make Twitch, YouTube, Facebook, Mixer and other live stream background music Digital Media Copyright Act (DMCA) Compliant by downloading and using licensed royalty free music from services such as [Artlist](https://artlist.io/Christopher-1010035) (affiliate link). This will help prevent live streams from being banned as major music companies are now able to detect live and past streams for licensed music.
+
+#### REST API
+
+**Set audio playlist by id**
+
+PUT: `/epic-player/playlist`
+request body example: `{ "playlist": "red-alert"}`
+
+Playlists and their IDs as referenced above are set in:
+
+- backend/src/config/config.ts
+- backend/src/config/epic-player/playlists/
+
+Audio files mentioned in playlists are placed in:
+
+- backend/src/config/epic-player/audio/
+
+**Play/pause audio**
+
+PUT: `/epic-player/play`
+request body example: `{ "play": true}`
+
+true to play, false to pause
+
+**Set audio volume**
+
+PUT: `/epic-player/volume`
+request body example: `{ "volume": 0.3}`
+
+0.0 is silent, 1.0 is full volume
 
 ### More Features On the Way
 
