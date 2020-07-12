@@ -9,6 +9,7 @@ import { SocketIoEvent } from './model/socketIoEvent';
 import { get } from 'lodash';
 import { EpicPlayer } from './modules/epic-player/epic-player';
 import { ToolkitServerConfig } from './config/model/toolkit-server-config';
+import * as cors from 'cors';
 
 export class WebToolkitServer {    
     protected _app: express.Application;
@@ -25,9 +26,12 @@ export class WebToolkitServer {
       this.router = express.Router();
 
       this._app = express();
+      this._app.use(cors());
+      this._app.options('*', cors());
       this._app.use(bodyParser.json());
       this._app.use(bodyParser.urlencoded({ extended: true }));
       this._app.use(this.router);
+      this._app.use(express.static('public'));
 
       this.server = createServer(this._app);
       this.io = socketIo(this.server);
@@ -59,6 +63,12 @@ export class WebToolkitServer {
         socket.on(SocketIoEvent.ERROR, (error: any) => {
           console.log('Client error');
         });
+
+        // Client React App is ready to receive client settings.
+        socket.on(SocketIoEvent.READY, () => {
+          const clientConfig = get(this.config, 'clientConfig', { error: 'There is no client config set.' });
+          socket.emit('clientConfig', clientConfig);
+        });
       });
     }
 
@@ -67,9 +77,9 @@ export class WebToolkitServer {
      */
     protected enableModules(): void {
         // Enable epic player
-        const epicPlayerEnabled = get(this.config, 'epicPlayer.enabled', true);
+        const epicPlayerEnabled = get(this.config, 'clientConfig.epicPlayerEnabled', false);
         if (epicPlayerEnabled) {
-            this.epicPlayer = new EpicPlayer(this.config.epicPlayer, this.router, this.io);
+            this.epicPlayer = new EpicPlayer(this.config.moduleConfig.epicPlayer, this.router, this.io);
         }
     }
 

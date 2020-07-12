@@ -1,7 +1,10 @@
 import { Playlist } from '../../../modules/epic-player/model/Playlist';
 
 const RedAlertPlaylist: Playlist = {
+    id: 'red-alert',
     fadeInTime: 500,
+    startSoundUri: 'effects/alert.mp3',
+    shuffle: true,
     songs: [
         {
             audioUri: 'red-alert/ElectricChase by IanPost Artlist.mp3'

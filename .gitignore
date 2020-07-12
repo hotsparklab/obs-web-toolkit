@@ -108,3 +108,6 @@ src/modules/epic-player/audio/*
 
 # mac files
 .DS_Store
+
+#public files e.g. added audio files
+public

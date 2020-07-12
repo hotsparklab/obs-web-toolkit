@@ -1,7 +1,7 @@
 import { BaseModule } from '../base-module/base-module';
 import * as express from 'express';
 import { EpicPlayerConfig } from './model/EpicPlayerConfig';
-import { get } from 'lodash';
+import { get, find } from 'lodash';
 import { Playlist } from './model/Playlist';
 import { EpicPlayerEvent } from './model/EpicPlayerEvent';
 
@@ -17,24 +17,25 @@ export class EpicPlayer extends BaseModule {
     protected config: EpicPlayerConfig;
     protected defaultConfig: EpicPlayerConfig = {
         // This is required config, so no real default here.
-        playlists: {
-            default: {
+        playlists: [
+            {
+                id: 'default',
                 songs: [
                     {
                         audioUri: ''
                     }
                 ]
             }
-        },
+        ],
         // This is required config, so no real default here.
         startingPlaylist: {
+            id: 'default',
             songs: [
                 {
                     audioUri: ''
                 }
             ]
         },
-        enabled: true,
         playOnStart: true,
         defaultVolume: 0.3
     };
@@ -54,7 +55,6 @@ export class EpicPlayer extends BaseModule {
         this.config = {
             playlists: config.playlists, // required
             startingPlaylist: config.startingPlaylist, // required
-            enabled: get(config, 'enabled', this.defaultConfig.enabled),
             playOnStart: get(config, 'playOnStart', this.defaultConfig.playOnStart),
             defaultVolume: get(config, 'defaultVolume', this.defaultConfig.defaultVolume)
         };
@@ -76,9 +76,14 @@ export class EpicPlayer extends BaseModule {
      */
     protected setIoConnections(): void {
         this.io.of(this.baseRoute).on('connect', socket => {
-            this.io.of(this.baseRoute).emit(EpicPlayerEvent.PLAYLIST, this.playlist);
-            this.io.of(this.baseRoute).emit(EpicPlayerEvent.PLAY, { 'play': this.playing });
-            this.io.of(this.baseRoute).emit(EpicPlayerEvent.VOLUME, { 'volume': this.volume});
+            console.log('/epic-player connected');
+
+            socket.on('ready', () => {
+                console.log('ready received');
+                socket.emit(EpicPlayerEvent.PLAYLIST, { 'playlist': this.playlist });
+                socket.emit(EpicPlayerEvent.PLAY, { 'play': this.playing });
+                socket.emit(EpicPlayerEvent.VOLUME, { 'volume': this.volume });
+            });
         });
     }
 
@@ -112,11 +117,12 @@ export class EpicPlayer extends BaseModule {
      */
     protected setPlaylist(req: any, res: any): void {
         const playlistId = get(req, 'body.playlist', null);
-        const playlist: Playlist = get(this.config, `playlists.${playlistId}`);
+        const playlist = find(this.config.playlists, ['id', playlistId], null);
         if (playlist) {
             this.playlist = playlist;
-            this.io.of(this.baseRoute).emit(EpicPlayerEvent.PLAYLIST, this.playlist);
+            this.io.of(this.baseRoute).emit(EpicPlayerEvent.PLAYLIST, { 'playlist': this.playlist });
             res.send({ response: `now playing: ${playlistId}` }).status(200);
+            console.log(`now playing: ${playlistId}`);
         } else {
             res.send({ response: `playlist of '${req.params.playlistName}' was not found.` }).status(404);
         }
@@ -126,7 +132,6 @@ export class EpicPlayer extends BaseModule {
      * Set play state: false for paused, true for playing
      */
     protected setPlay(req: any, res: any): void {
-        this.io.of(this.baseRoute).emit(EpicPlayerEvent.PLAY);
         res.send({ response: `play` }).status(200);
 
         const playing: boolean = get(req, 'body.play', null);

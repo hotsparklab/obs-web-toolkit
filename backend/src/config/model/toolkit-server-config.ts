@@ -1,7 +1,9 @@
-import { EpicPlayerConfig } from '../../modules/epic-player/model/EpicPlayerConfig';
+import { ClientConfig } from './client-config';
+import { ModuleConfig } from './module-config';
 
 export interface ToolkitServerConfig
 {
     port: number,
-    epicPlayer: EpicPlayerConfig
+    clientConfig: ClientConfig
+    moduleConfig: ModuleConfig
 }

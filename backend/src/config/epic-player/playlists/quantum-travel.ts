@@ -1,7 +1,9 @@
 import { Playlist } from '../../../modules/epic-player/model/Playlist';
 
 const QuantumTravelPlaylist: Playlist = {
-    fadeInTime: 5000,
+    id: 'quantum-travel',
+    shuffle: true,
+    fadeInTime: 10000,
     songs: [
         {
             audioUri: 'quantum-travel/BetaThemeII by KylePreston Artlist.mp3'

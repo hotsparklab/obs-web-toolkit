@@ -1,7 +1,9 @@
 import { Playlist } from '../../../modules/epic-player/model/Playlist';
 
 const YellowAlertPlaylist: Playlist = {
-    fadeInTime: 5000,
+    id: 'yellow-alert',
+    fadeInTime: 2000,
+    shuffle: true,
     songs: [
         {
             audioUri: 'yellow-alert/ArrecifeInstrumentalVersion by TomasNovoa Artlist.mp3'

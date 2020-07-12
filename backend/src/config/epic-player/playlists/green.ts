@@ -1,7 +1,9 @@
 import { Playlist } from '../../../modules/epic-player/model/Playlist';
 
 const GreenPlaylist: Playlist = {
+    id: 'green',
     fadeInTime: 5000,
+    shuffle: true,
     songs: [
         {
             audioUri: 'green/ACertainDistance by SeanWilliams Artlist.mp3'
