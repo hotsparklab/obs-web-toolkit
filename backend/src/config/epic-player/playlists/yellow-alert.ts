@@ -4,6 +4,7 @@ const YellowAlertPlaylist: Playlist = {
     id: 'yellow-alert',
     fadeInTime: 2000,
     shuffle: true,
+    startSoundUri: 'effects/yellow-alert.mp3',
     songs: [
         {
             audioUri: 'yellow-alert/ArrecifeInstrumentalVersion by TomasNovoa Artlist.mp3'
