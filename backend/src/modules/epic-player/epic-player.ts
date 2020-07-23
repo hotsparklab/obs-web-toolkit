@@ -17,6 +17,7 @@ export class EpicPlayer extends BaseModule {
     protected config: EpicPlayerConfig;
     protected defaultConfig: EpicPlayerConfig = {
         // This is required config, so no real default here.
+        audioDir: '',
         playlists: [
             {
                 id: 'default',
@@ -49,10 +50,11 @@ export class EpicPlayer extends BaseModule {
     // Currently set to play?
     protected playing: boolean;
 
-    constructor(config: EpicPlayerConfig, router: express.Router, io: SocketIO.Server) {
-        super(router, io);
+    constructor(config: EpicPlayerConfig, app: express.Application, router: express.Router, io: SocketIO.Server) {
+        super(app, router, io);
 
         this.config = {
+            audioDir: config.audioDir,
             playlists: config.playlists, // required
             startingPlaylist: config.startingPlaylist, // required
             playOnStart: get(config, 'playOnStart', this.defaultConfig.playOnStart),
@@ -110,6 +112,14 @@ export class EpicPlayer extends BaseModule {
         this.router.put(`${this.baseRoute}/volume`, (req, res) => {
             this.setVolume(req, res);
         });
+
+        // Audio files
+        // Override to mounted drive if specified (if a Raspberry Pi for example).
+        // Otherwise use local /public/audio/ directory as already set.
+        // TODO: Is there a better way to go about this? This feels out of place.
+        if (this.config.audioDir.includes('/mnt/')) {
+            this.app.use('/audio', express.static(this.config.audioDir));
+        }
     }
 
     /**
@@ -124,7 +134,8 @@ export class EpicPlayer extends BaseModule {
             res.send({ response: `now playing: ${playlistId}` }).status(200);
             console.log(`now playing: ${playlistId}`);
         } else {
-            res.send({ response: `playlist of '${req.params.playlistName}' was not found.` }).status(404);
+            res.send({ response: `playlist of '${req.params.playlist}' was not found.` }).status(404);
+            console.log(req.params);
         }
     }
 

@@ -6,10 +6,12 @@ export class BaseModule {
     // Note: Replace this with the extended module directory name.
     protected baseRoute = '/base-module';
 
+    protected app: express.Application;
     protected router: express.Router;
     protected io: SocketIO.Server;
 
-    constructor(router: express.Router, io: SocketIO.Server) {
+    constructor(app: express.Application, router: express.Router, io: SocketIO.Server) {
+        this.app = app;
         this.router = router;
         this.io = io;
     }

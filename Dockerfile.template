@@ -1,0 +1,69 @@
+###########################################
+# First Stage: Compile Backend TypeScript #
+###########################################
+
+# Thanks: https://stackoverflow.com/questions/60916271/how-do-i-run-typescript-tsc-before-copy-in-dockerfile-template/60917273#60917273
+FROM balenalib/%%BALENA_MACHINE_NAME%%-node AS backendBuild
+
+WORKDIR /usr/src/app
+
+# Install the Javascript dependencies, including all devDependencies.
+COPY backend/package.json .
+RUN yarn install
+
+# Copy the rest of the application in and build it.
+COPY backend/ ./
+
+# RUN typescript build
+RUN ./node_modules/typescript/bin/tsc -p ./tsconfig.json
+
+# Clean up node_modules to not include dev dependencies.
+RUN rm -rf ./node_modules
+RUN JOBS=MAX yarn install --production
+
+########################################
+# Second Stage: Build Static React App #
+########################################
+
+FROM balenalib/%%BALENA_MACHINE_NAME%%-node AS frontendBuild
+
+WORKDIR /usr/src/app
+
+# Install the Javascript dependencies, including all devDependencies.
+COPY frontend/package.json .
+RUN yarn install
+
+# Copy the rest of the application in and build it.
+COPY frontend/ ./
+RUN yarn run build
+
+# Cleanup
+RUN rm -rf ./node_modules
+
+##################################
+# Third Stage: Prepare Dist App #
+##################################
+
+FROM balenalib/%%BALENA_MACHINE_NAME%%-node
+
+# Enable udev for detection of dynamically plugged devices
+ENV UDEV=on
+COPY udev/usb.rules /etc/udev/rules.d/usb.rules
+
+# Install dependencies
+RUN install_packages util-linux
+
+WORKDIR /usr/src/app
+
+# Move scripts used for mounting USB
+COPY scripts scripts
+RUN chmod +x scripts/*
+
+# Copy needed files in root to the working directory in the container
+COPY --from=backendBuild /usr/src/app/dist dist
+COPY --from=backendBuild /usr/src/app/node_modules dist/node_modules
+COPY --from=frontendBuild /usr/src/app/build dist/public
+COPY backend/package.json package.json
+
+# server.js will run when container starts up on the device
+CMD ["/bin/bash", "/usr/src/app/scripts/start.sh"]

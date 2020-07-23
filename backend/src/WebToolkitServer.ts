@@ -1,15 +1,16 @@
 // Thanks: https://medium.com/@rossbulat/typescript-live-chat-express-and-socket-io-server-setup-8d24fe13d00
 // Thanks: https://www.valentinog.com/blog/socket-react/
 
-import * as express from 'express';
+import express from 'express';
 import * as bodyParser from 'body-parser';
-import * as socketIo from 'socket.io';
+import socketIo from 'socket.io';
 import { createServer, Server } from 'http';
 import { SocketIoEvent } from './model/socketIoEvent';
 import { get } from 'lodash';
 import { EpicPlayer } from './modules/epic-player/epic-player';
 import { ToolkitServerConfig } from './config/model/toolkit-server-config';
-import * as cors from 'cors';
+import cors from 'cors';
+import path from 'path';
 
 export class WebToolkitServer {    
     protected _app: express.Application;
@@ -31,7 +32,7 @@ export class WebToolkitServer {
       this._app.use(bodyParser.json());
       this._app.use(bodyParser.urlencoded({ extended: true }));
       this._app.use(this.router);
-      this._app.use(express.static('public'));
+      this._app.use(express.static(__dirname + '/../public'));
 
       this.server = createServer(this._app);
       this.io = socketIo(this.server);
@@ -79,7 +80,7 @@ export class WebToolkitServer {
         // Enable epic player
         const epicPlayerEnabled = get(this.config, 'clientConfig.epicPlayerEnabled', false);
         if (epicPlayerEnabled) {
-            this.epicPlayer = new EpicPlayer(this.config.moduleConfig.epicPlayer, this.router, this.io);
+            this.epicPlayer = new EpicPlayer(this.config.moduleConfig.epicPlayer, this.app, this.router, this.io);
         }
     }
 
@@ -87,9 +88,11 @@ export class WebToolkitServer {
      * Initial base web toolkit server routes.
      */
     protected initBaseRoutes(): void {
+      /*
       this.router.get("/", (req, res) => {
-        res.send({ response: "This thing is working pretty well." }).status(200);
+        res.sendFile(__dirname + '/public/index.html');
       });
+      */
     }
 
     /**

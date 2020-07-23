@@ -1,0 +1,10 @@
+version: '2'
+services:
+  server:
+    privileged: true
+    build: .
+    ports:
+      - "4001:4001"
+    environment:
+      - USB_VOLUME_NAME
+      - AUDIO_PATH
