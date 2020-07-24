@@ -32,7 +32,14 @@ export class WebToolkitServer {
       this._app.use(bodyParser.json());
       this._app.use(bodyParser.urlencoded({ extended: true }));
       this._app.use(this.router);
-      this._app.use(express.static(__dirname + '/../public'));
+      if (process.env.NODE_ENV === 'production') {
+        // public in dist lives in parent level
+        this._app.use(express.static(__dirname + '/public'));
+      } else {
+        // public lives at same level
+        this._app.use(express.static(__dirname + '/../public'));
+      }
+      
 
       this.server = createServer(this._app);
       this.io = socketIo(this.server);

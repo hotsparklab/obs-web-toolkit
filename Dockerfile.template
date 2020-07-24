@@ -51,7 +51,7 @@ ENV UDEV=on
 COPY udev/usb.rules /etc/udev/rules.d/usb.rules
 
 # Install dependencies
-RUN install_packages util-linux
+RUN install_packages util-linux exfat-fuse exfat-utils
 
 WORKDIR /usr/src/app
 
