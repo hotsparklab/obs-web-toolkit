@@ -13,6 +13,8 @@
     "@types/react-howler": "^3.7.1",
     "howler": "^2.2.0",
     "lodash": "^4.17.19",
+    "mobx": "^6.0.0",
+    "mobx-react": "^7.0.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-howler": "^3.7.4",
