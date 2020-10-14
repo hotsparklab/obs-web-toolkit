@@ -1,6 +1,7 @@
-import { EpicPlayerConfig } from '../../modules/epic-player/model/EpicPlayerConfig';
+import { RetroMessageConsoleConfig } from '../../config/model/RetroMessageConsoleConfig';
 
 export interface ClientConfig
 {
-    epicPlayerEnabled: boolean
+    epicPlayerEnabled: boolean,
+    retroMessageConsole: RetroMessageConsoleConfig
 }

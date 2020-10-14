@@ -4,13 +4,37 @@ import { QuantumTravelPlaylist } from './epic-player/playlists/quantum-travel';
 import { RedAlertPlaylist } from './epic-player/playlists/red-alert';
 import { YellowAlertPlaylist } from './epic-player/playlists/yellow-alert';
 import { config as dotenv } from 'dotenv';
+import { DisplayMessageCategory } from '../../../frontend/src/components/DisplayMessageStore/model/DisplayMessageCategory';
 
 dotenv();
 
 const config: ToolkitServerConfig = {
     port: 4001,
     clientConfig: {
-        epicPlayerEnabled: true
+        epicPlayerEnabled: true,
+        retroMessageConsole: {
+            enabled: true,
+            props: {
+                width: 500,
+                top: 100,
+                left: 50,
+                fontSize: 32,
+                typeDelay: 15,
+                typeCursor: '▋',
+                messageCategories: [
+                    DisplayMessageCategory.ERROR,
+                    DisplayMessageCategory.INFO,
+                    DisplayMessageCategory.LOG,
+                    DisplayMessageCategory.WARN,
+                    
+                    DisplayMessageCategory.PLAY,
+                    DisplayMessageCategory.PLAYLIST,
+                    DisplayMessageCategory.PAUSE,
+                    DisplayMessageCategory.VOLUME
+                ],
+                maxDisplayedMessages: 5
+            }
+        }
     },
     moduleConfig: {
         epicPlayer: {

@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu+Mono&display=swap');
+
+.RetroMessageConsole {
+    text-shadow: #000000 -1px -2px 0.6em, #ffffff -1px -2px 0.4em;
+    font-family: 'Ubuntu Mono', monospace;
+    word-break: break-word;
+    position: absolute;
+    overflow: hidden;
+
+    height: 500px; /* gets overridden by props + calculation */
+    top: 0; /* gets overridden by props */
+    left: 0; /* gets overridden by props */
+    width: 1000px; /* gets overridden by props */
+    line-height: 46px; /* gets overridden by props + calculation */
+    font-size: 40px; /* gets overridden by props */
+
+    transform: perspective(1000px) rotateY(25deg);
+    perspective-origin: 0px 50%;
+}
+
+.messages {
+    background-color: rgba(0, 0, 0, 0.35);
+    padding: 20px;
+}
+
+.RetroMessageConsole .Typewriter {
+    padding-bottom: 10px;
+}
+
+.RetroMessageConsole .messages div:not(:last-child) .Typewriter__cursor {
+    display: none;
+}

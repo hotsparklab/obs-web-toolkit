@@ -2,6 +2,7 @@ import { Playlist } from '../../../modules/epic-player/model/Playlist';
 
 const GreenPlaylist: Playlist = {
     id: 'green',
+    name: 'Green',
     fadeInTime: 5000,
     shuffle: true,
     songs: [

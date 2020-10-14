@@ -7,6 +7,9 @@ import { Song } from './model/Song';
 import { Playlist } from './model/Playlist';
 import { Howl } from 'howler';
 import { makeObservable, observable } from 'mobx';
+import DisplayMessageStore from '../../DisplayMessageStore';
+import { DataSource } from '../../DisplayMessageStore/model/DataSource';
+import { DisplayMessageCategory } from '../../DisplayMessageStore/model/DisplayMessageCategory';
 
 class EpicPlayerStore { 
   
@@ -14,15 +17,16 @@ class EpicPlayerStore {
 
   protected socket: SocketIOClient.Socket;
   protected musicPlayers:Howl[];
-  //protected effectPlayer: Howl = new Howl({});
   protected effectPlayer: Howl;
-  // protected unplayedSongs: Song[] = [];
   unplayedSongs: Song[];
+
+  protected displayMessageStore: DisplayMessageStore;
 
   public volume = 0.25;
   public playing = false;
   public playlist: Playlist = {
     id: 'default',
+    name: 'Default',
     songs: [{ audioUri: '' }] as Song[]
   };
   public errors: string[] = [];
@@ -31,6 +35,9 @@ class EpicPlayerStore {
     if (EpicPlayerStore.instance) {
       throw new Error("Error - use EpicPlayerStore.getInstance()");
     }
+
+    // Enable writing messages/logs to be displayed.
+    this.displayMessageStore = DisplayMessageStore.getInstance();
 
     // Allow other components to react to state changes.
     makeObservable(this, {
@@ -75,8 +82,18 @@ class EpicPlayerStore {
       this.playing = event.play;
       if (this.playing === true) {
         this.musicPlayers[this.musicPlayers.length - 1].play();
+        this.displayMessageStore.addMessage({
+          source: DataSource.LOCAL,
+          message: `Play: ${this.playlist.name}`,
+          category: DisplayMessageCategory.PLAY
+        });
       } else {
         this.musicPlayers[this.musicPlayers.length - 1].pause();
+        this.displayMessageStore.addMessage({
+          source: DataSource.LOCAL,
+          message: `Pause: ${this.playlist.name}`,
+          category: DisplayMessageCategory.PAUSE
+        });
       }
     });
 
@@ -84,17 +101,37 @@ class EpicPlayerStore {
     this.socket.on('volume', (event: VolumeEvent) => {
       this.volume = event.volume;
       this.musicPlayers[this.musicPlayers.length - 1].volume(this.volume);
+      this.displayMessageStore.addMessage({
+        source: DataSource.LOCAL,
+        message: `Volume: ${(this.volume * 100)}%`,
+        category: DisplayMessageCategory.VOLUME
+      });
     });
 
     // Handle socket errors.
     this.socket.on('connect_failed', () => {
       this.errors.push('EpicPlayer: socket connection failed');
+      this.displayMessageStore.addMessage({
+        source: DataSource.LOCAL,
+        message: `EpicPlayer: socket connection failed`,
+        category: DisplayMessageCategory.ERROR
+      });
     });
     this.socket.on('reconnect_failed', () => {
       this.errors.push('EpicPlayer: socket failed to reconnect');
+      this.displayMessageStore.addMessage({
+        source: DataSource.LOCAL,
+        message: `EpicPlayer: socket failed to reconnect`,
+        category: DisplayMessageCategory.ERROR
+      });
     });
     this.socket.on('error', (err: Error) => {
       this.errors.push(`EpicPlayer: an error occurred: ${err.message}`);
+      this.displayMessageStore.addMessage({
+        source: DataSource.LOCAL,
+        message: `EpicPlayer: an error occurred: ${err.message}`,
+        category: DisplayMessageCategory.ERROR
+      });
     });
 
     // Emit 'ready' event to receive first batch of socket events.
@@ -110,6 +147,7 @@ class EpicPlayerStore {
       autoplay: false,
       loop: false,
       volume: 0,
+      format: ['mp3']
     });
 
     // Once loaded
@@ -234,6 +272,12 @@ class EpicPlayerStore {
       console.log('effect', newAudioSrc);
       this.effectPlayer = this.createHowlerSound(newAudioSrc, this.onEffectLoaded, this.onEffectFinished);
     }
+
+    this.displayMessageStore.addMessage({
+      source: DataSource.LOCAL,
+      message: `Initialize: ${newPlaylist.name}`,
+      category: DisplayMessageCategory.PLAYLIST
+    });
   }
 
   /**

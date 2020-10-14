@@ -1,5 +1,5 @@
 import React from 'react';
-import EpicPlayerStore from './EpicPlayerStore';
+import EpicPlayerStore from './EpicPlayerStore/EpicPlayerStore';
 import { observer } from 'mobx-react';
 
 // TODO: If showing errors in the overlay, consider showing all app errors in a single list.

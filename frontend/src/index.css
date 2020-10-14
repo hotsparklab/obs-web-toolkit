@@ -1,4 +1,13 @@
 body {
   margin: 0;
   font-family: Verdana, Geneva, Tahoma, sans-serif;
+  color: #FFF;
+  background: #FF9900;
+
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  /* temp */
+  background: url(https://images.wallpapersden.com/image/download/synthwave-and-retrowave_66497_1920x1080.jpg) no-repeat #000;
 }

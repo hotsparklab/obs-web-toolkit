@@ -1,3 +1,4 @@
 export interface ClientConfigEvent {
-    epicPlayerEnabled: boolean
+    epicPlayerEnabled: boolean,
+    retroMessageConsoleEnabled: boolean
 }

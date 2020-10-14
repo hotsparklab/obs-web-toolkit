@@ -6,6 +6,9 @@ import { Song } from './Song';
 export interface Playlist {
     // id used in rest requests and player to identify playlist
     id: string;
+
+    // Name used in display messages
+    name: string;
     
     // Songs contained within the playlist
     songs: Song[];
