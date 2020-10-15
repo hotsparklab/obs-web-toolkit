@@ -1,5 +1,5 @@
-import { ClientConfig } from './client-config';
-import { ModuleConfig } from './module-config';
+import { ClientConfig } from './ClientConfig';
+import { ModuleConfig } from './ModuleConfig';
 
 export interface ToolkitServerConfig
 {

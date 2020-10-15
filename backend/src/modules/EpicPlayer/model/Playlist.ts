@@ -2,7 +2,6 @@ import { Song } from './Song';
 
 /**
  * A song playlist with fade-in time for transitioning into playlist from another.
- * TODO: Consider removing duplicate interfaces by referencing UI interfaces.
  */
 export interface Playlist {
     // id used in rest requests and player to identify playlist

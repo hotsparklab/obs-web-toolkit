@@ -1,4 +1,4 @@
-import { RetroMessageConsoleConfig } from '../../config/model/RetroMessageConsoleConfig';
+import { RetroMessageConsoleConfig } from './RetroMessageConsoleConfig';
 
 export interface ClientConfig
 {

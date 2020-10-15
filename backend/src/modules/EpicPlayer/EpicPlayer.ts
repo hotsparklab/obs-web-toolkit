@@ -1,9 +1,11 @@
-import { BaseModule } from '../base-module/base-module';
+import { BaseModule } from '../base-module/BaseModule';
 import * as express from 'express';
 import { EpicPlayerConfig } from './model/EpicPlayerConfig';
 import { get, find } from 'lodash';
 import { Playlist } from './model/Playlist';
+import { Song } from './model/Song';
 import { EpicPlayerEvent } from './model/EpicPlayerEvent';
+import { readdirSync } from 'fs';
 
 /**
  * Epic Player is an epic audio player server.
@@ -21,6 +23,7 @@ export class EpicPlayer extends BaseModule {
         playlists: [
             {
                 id: 'default',
+                name: 'Default',
                 songs: [
                     {
                         audioUri: ''
@@ -31,6 +34,7 @@ export class EpicPlayer extends BaseModule {
         // This is required config, so no real default here.
         startingPlaylist: {
             id: 'default',
+            name: 'Default',
             songs: [
                 {
                     audioUri: ''
@@ -63,6 +67,10 @@ export class EpicPlayer extends BaseModule {
 
         // Set initial state
         this.playlist = this.config.startingPlaylist;
+        // Load song list dynamically from directory if not explicitly set in config.
+        if (this.playlist.songs.length === 0) {
+            this.playlist.songs = this.getSongsInDirectory(this.playlist.id);
+        }
         this.volume = this.config.defaultVolume >= 0 && this.config.defaultVolume <= 1 ? this.config.defaultVolume : 0.3;
         this.playing = this.config.playOnStart;
 
@@ -130,6 +138,12 @@ export class EpicPlayer extends BaseModule {
         const playlist = find(this.config.playlists, ['id', playlistId], null);
         if (playlist) {
             this.playlist = playlist;
+
+            // Load song list dynamically from directory if not explicitly set in config.
+            if (this.playlist.songs.length === 0) {
+                const songs: Song[] = this.getSongsInDirectory(this.playlist.id);
+            }
+
             this.io.of(this.baseRoute).emit(EpicPlayerEvent.PLAYLIST, { 'playlist': this.playlist });
             res.send({ response: `now playing: ${playlistId}` }).status(200);
             console.log(`now playing: ${playlistId}`);
@@ -137,6 +151,22 @@ export class EpicPlayer extends BaseModule {
             res.send({ response: `playlist of '${req.params.playlist}' was not found.` }).status(404);
             console.log(req.params);
         }
+    }
+
+    /**
+     * Get a list of songs in a directory if not explicitly specified in config.
+     */
+    protected getSongsInDirectory = (playlistId: string): Song[] => {
+        const audioDir = `${this.config.audioDir}/${playlistId}`;
+        let songs: Song[] = [];
+        readdirSync(audioDir).forEach(file => {
+            const song: Song = {
+                audioUri: `${playlistId}/${file}`
+            }
+            songs.push(song);
+        });
+
+        return songs;
     }
 
     /**

@@ -1,10 +1,10 @@
-import { ToolkitServerConfig } from './model/toolkit-server-config';
-import { GreenPlaylist } from './epic-player/playlists/green';
-import { QuantumTravelPlaylist } from './epic-player/playlists/quantum-travel';
-import { RedAlertPlaylist } from './epic-player/playlists/red-alert';
-import { YellowAlertPlaylist } from './epic-player/playlists/yellow-alert';
+import { ToolkitServerConfig } from './model/ToolkitServerConfig';
+import { GreenPlaylist } from './EpicPlayer/playlists/GreenPlaylist';
+import { QuantumTravelPlaylist } from './EpicPlayer/playlists/QuantumTravelPlaylist';
+import { RedAlertPlaylist } from './EpicPlayer/playlists/RedAlertPlaylist';
+import { YellowAlertPlaylist } from './EpicPlayer/playlists/YellowAlertPlaylist';
 import { config as dotenv } from 'dotenv';
-import { DisplayMessageCategory } from '../../../frontend/src/components/DisplayMessageStore/model/DisplayMessageCategory';
+import { DisplayMessageCategory } from './model/DisplayMessageCategory';
 
 dotenv();
 

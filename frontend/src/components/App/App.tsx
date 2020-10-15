@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import io from "socket.io-client";
 import { config } from '../../config';
-import { AppSocketEmit } from './model/app-socket-emit';
-import { AppSocketEvent } from './model/app-socket-event';
+import { AppSocketEmit } from './model/AppSocketEmit';
+import { AppSocketEvent } from './model/AppSocketEvent';
 import './App.css';
 import EpicPlayer from '../EpicPlayer';
 import { get } from 'lodash';

@@ -1,4 +1,4 @@
-import { Playlist } from './Playlist';
+import { Playlist } from '../../../modules/EpicPlayer/model/Playlist';
 
 export interface EpicPlayerConfig
 {

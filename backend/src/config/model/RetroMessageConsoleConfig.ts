@@ -1,4 +1,4 @@
-import { RetroMessageConsoleProps } from '../../../../frontend/src/components/RetroMessageConsole/model/RetroMessageConsoleProps';
+import { RetroMessageConsoleProps } from './RetroMessageConsoleProps';
 
 export interface RetroMessageConsoleConfig {
     enabled: boolean,

@@ -5,12 +5,11 @@ import express from 'express';
 import * as bodyParser from 'body-parser';
 import socketIo from 'socket.io';
 import { createServer, Server } from 'http';
-import { SocketIoEvent } from './model/socketIoEvent';
+import { SocketIoEvent } from './model/SocketIoEvent';
 import { get } from 'lodash';
-import { EpicPlayer } from './modules/epic-player/epic-player';
-import { ToolkitServerConfig } from './config/model/toolkit-server-config';
+import { EpicPlayer } from './modules/EpicPlayer/EpicPlayer';
+import { ToolkitServerConfig } from './config/model/ToolkitServerConfig';
 import cors from 'cors';
-import path from 'path';
 
 export class WebToolkitServer {    
     protected _app: express.Application;
