@@ -9,7 +9,6 @@ import { SocketIoEvent } from './model/SocketIoEvent';
 import { get } from 'lodash';
 import { Twitch } from './modules/Twitch/Twitch';
 import { EpicPlayer } from './modules/EpicPlayer/EpicPlayer';
-import { ToolkitServerConfig } from './config/model/ToolkitServerConfig';
 import { config } from './config/config';
 import cors from 'cors';
 
