@@ -1,59 +1,60 @@
 // Thanks: https://medium.com/@rossbulat/typescript-live-chat-express-and-socket-io-server-setup-8d24fe13d00
 // Thanks: https://www.valentinog.com/blog/socket-react/
 
-// TODO: Set REST routes in a modular way
-// TODO: Plug in socket.io capabilities in a modular way
-
-import * as express from 'express';
-import * as socketIo from 'socket.io';
+import express from 'express';
+import * as bodyParser from 'body-parser';
+import socketIo from 'socket.io';
 import { createServer, Server } from 'http';
-import { SocketIoEvent } from './model/socketIoEvent';
+import { SocketIoEvent } from './model/SocketIoEvent';
+import { get } from 'lodash';
+import { Twitch } from './modules/Twitch/Twitch';
+import { EpicPlayer } from './modules/EpicPlayer/EpicPlayer';
+import { ToolkitServerConfig } from './config/model/ToolkitServerConfig';
+import { config } from './config/config';
+import cors from 'cors';
 
-// TODO: Update and test this:
-const cors = require('cors');
-
-export class WebToolkitServer {
-    // TODO: Move this to config
-    public static readonly PORT: number = 8080;
-    
+export class WebToolkitServer {    
     protected _app: express.Application;
     protected server: Server;
     protected router: express.Router;
     protected io: SocketIO.Server;
-    protected port: string | number;
+    protected port: number;
+    protected epicPlayer: EpicPlayer;
+    protected twitch: Twitch;
     
     constructor () {
+      this.port = get(config, 'port', 4001);
+      this.router = express.Router();
+
       this._app = express();
-
-      // TODO: Move this to config
-      this.port = process.env.PORT || WebToolkitServer.PORT;
-
       this._app.use(cors());
       this._app.options('*', cors());
+      this._app.use(bodyParser.json());
+      this._app.use(bodyParser.urlencoded({ extended: true }));
+      this._app.use(this.router);
+      if (process.env.NODE_ENV === 'production') {
+        // public in dist lives in parent level
+        this._app.use(express.static(__dirname + '/public'));
+      } else {
+        // public lives at same level
+        this._app.use(express.static(__dirname + '/../public'));
+      }
+      
       this.server = createServer(this._app);
-      this.router = express.Router();
-      this.initSocket();
-      this.initRoutes();
+      this.io = socketIo(this.server);
+
+      this.initBaseRoutes();
+      this.enableModules();
       this.listen();
     }
 
-    protected listen (): void {
+    protected listen(): void {
       this.server.listen(this.port, () => {
         console.log('Running server on port %s', this.port);
       });
   
       this.io.on(SocketIoEvent.CONNECT, (socket: socketIo.Socket) => {
         console.log(`Connected client on port ${this.port}.`);
-  
-        // TODO: Consider what to do with individual socket connections once connected.
-        // Plug in other modules if possible right here? subscribeToAllEvents?
-        // Namespaces! Rooms?
-        /*
-        socket.on(SocketIoEvent.MESSAGE, (m: SomeMessage) => {
-          console.log('[server](message): %s', JSON.stringify(m));
-          this.io.emit('message', m);
-        });
-        */
   
         // Fired when the client is going to be disconnected (but hasn’t left its rooms yet).
         socket.on(SocketIoEvent.DISCONNECTING, (reason: string) => {
@@ -69,33 +70,47 @@ export class WebToolkitServer {
         socket.on(SocketIoEvent.ERROR, (error: any) => {
           console.log('Client error');
         });
+
+        // Client React App is ready to receive client settings.
+        socket.on(SocketIoEvent.READY, () => {
+          const clientConfig = get(config, 'clientConfig', { error: 'There is no client config set.' });
+          socket.emit('clientConfig', clientConfig);
+        });
       });
-
     }
 
     /**
-     * 
+     * Enable connected modules
      */
-    protected initSocket(): void {
-      this.io = socketIo(this.server);
+    protected enableModules(): void {
+        // Enable epic player
+        const epicPlayerConfig = get(config, 'moduleConfig.epicPlayer', {});
+        if (epicPlayerConfig) {
+            this.epicPlayer = new EpicPlayer(epicPlayerConfig, this.app, this.router, this.io);
+        }
+
+        // Enable Twitch interactivity
+        const twitchConfig = get(config, 'moduleConfig.twitch', {});
+        if (twitchConfig) {
+          this.twitch = new Twitch(twitchConfig, this.app, this.router, this.io);
+        }
     }
 
     /**
-     * 
+     * Initial base web toolkit server routes.
      */
-    protected initRoutes(): void {
-      // TODO: Make this for real. Make it scale.
+    protected initBaseRoutes(): void {
+      /*
       this.router.get("/", (req, res) => {
-        res.send({ response: "I am alive" }).status(200);
+        res.sendFile(__dirname + '/public/index.html');
       });
-
-      this._app.use(this.router);
+      */
     }
 
     /**
      * Return the express app
      */
-    get app (): express.Application {
+    get app(): express.Application {
       return this._app;
     }
 }

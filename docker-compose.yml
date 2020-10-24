@@ -1,0 +1,13 @@
+version: '2'
+services:
+  server:
+    privileged: true
+    build: .
+    ports:
+      - "80:4001"
+    environment:
+      - USB_VOLUME_NAME
+      - TWITCH_CLIENT_ID
+      - TWITCH_CLIENT_SECRET
+      - TWITCH_CHANNEL
+      - TWITCH_CLIENT_REDIRECT_URI

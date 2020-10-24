@@ -1,0 +1,10 @@
+<html>
+    <head>
+        <title>Login To Twitch</title>
+    </head>
+    <body>
+        <h1>Login to Twitch</h1>
+        <p>To Authorize the Chat Bot app to interact with the channel, login to Twitch.</p>
+        <a href="https://id.twitch.tv/oauth2/authorize?client_id=${this.config.clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${this.encodeScopesForUrl()}">Authorize Bot with Twitch</a>
+    </body>
+</html>
