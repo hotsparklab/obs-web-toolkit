@@ -1,4 +1,4 @@
-import { BaseModule } from '../base-module/BaseModule';
+import { BaseModule } from '../BaseModule/BaseModule';
 import * as express from 'express';
 import { EpicPlayerConfig } from './model/EpicPlayerConfig';
 import { get, find } from 'lodash';
@@ -142,6 +142,7 @@ export class EpicPlayer extends BaseModule {
             // Load song list dynamically from directory if not explicitly set in config.
             if (this.playlist.songs.length === 0) {
                 const songs: Song[] = this.getSongsInDirectory(this.playlist.id);
+                this.playlist.songs = songs;
             }
 
             this.io.of(this.baseRoute).emit(EpicPlayerEvent.PLAYLIST, { 'playlist': this.playlist });
@@ -159,9 +160,10 @@ export class EpicPlayer extends BaseModule {
     protected getSongsInDirectory = (playlistId: string): Song[] => {
         const audioDir = `${this.config.audioDir}/${playlistId}`;
         let songs: Song[] = [];
-        readdirSync(audioDir).forEach(file => {
+        const files = readdirSync(audioDir).filter(item => !(/(^|\/)\.[^\/\.]/g).test(item));
+        files.forEach(file => {
             const song: Song = {
-                audioUri: `${playlistId}/${file}`
+                audioUri: `${playlistId}/${encodeURI(file)}`
             }
             songs.push(song);
         });

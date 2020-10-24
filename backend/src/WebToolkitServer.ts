@@ -7,8 +7,10 @@ import socketIo from 'socket.io';
 import { createServer, Server } from 'http';
 import { SocketIoEvent } from './model/SocketIoEvent';
 import { get } from 'lodash';
+import { Twitch } from './modules/Twitch/Twitch';
 import { EpicPlayer } from './modules/EpicPlayer/EpicPlayer';
 import { ToolkitServerConfig } from './config/model/ToolkitServerConfig';
+import { config } from './config/config';
 import cors from 'cors';
 
 export class WebToolkitServer {    
@@ -17,12 +19,11 @@ export class WebToolkitServer {
     protected router: express.Router;
     protected io: SocketIO.Server;
     protected port: number;
-    protected config: ToolkitServerConfig;
     protected epicPlayer: EpicPlayer;
+    protected twitch: Twitch;
     
-    constructor (config: ToolkitServerConfig) {
-      this.config = config;
-      this.port = get(this.config, 'port', 4001);
+    constructor () {
+      this.port = get(config, 'port', 4001);
       this.router = express.Router();
 
       this._app = express();
@@ -39,7 +40,6 @@ export class WebToolkitServer {
         this._app.use(express.static(__dirname + '/../public'));
       }
       
-
       this.server = createServer(this._app);
       this.io = socketIo(this.server);
 
@@ -73,7 +73,7 @@ export class WebToolkitServer {
 
         // Client React App is ready to receive client settings.
         socket.on(SocketIoEvent.READY, () => {
-          const clientConfig = get(this.config, 'clientConfig', { error: 'There is no client config set.' });
+          const clientConfig = get(config, 'clientConfig', { error: 'There is no client config set.' });
           socket.emit('clientConfig', clientConfig);
         });
       });
@@ -84,9 +84,15 @@ export class WebToolkitServer {
      */
     protected enableModules(): void {
         // Enable epic player
-        const epicPlayerEnabled = get(this.config, 'clientConfig.epicPlayerEnabled', false);
-        if (epicPlayerEnabled) {
-            this.epicPlayer = new EpicPlayer(this.config.moduleConfig.epicPlayer, this.app, this.router, this.io);
+        const epicPlayerConfig = get(config, 'moduleConfig.epicPlayer', {});
+        if (epicPlayerConfig) {
+            this.epicPlayer = new EpicPlayer(epicPlayerConfig, this.app, this.router, this.io);
+        }
+
+        // Enable Twitch interactivity
+        const twitchConfig = get(config, 'moduleConfig.twitch', {});
+        if (twitchConfig) {
+          this.twitch = new Twitch(twitchConfig, this.app, this.router, this.io);
         }
     }
 

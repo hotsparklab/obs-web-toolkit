@@ -2,6 +2,7 @@ import { RetroMessageConsoleConfig } from './RetroMessageConsoleConfig';
 
 export interface ClientConfig
 {
-    epicPlayerEnabled: boolean,
-    retroMessageConsole: RetroMessageConsoleConfig
+    epicPlayer: boolean,
+    retroMessageConsole?: RetroMessageConsoleConfig,
+    twitchChatClient: boolean
 }

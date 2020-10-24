@@ -18,7 +18,7 @@
     perspective-origin: 0px 50%;
 }
 
-.messages {
+.RetroMessageConsole .messages {
     background-color: rgba(0, 0, 0, 0.35);
     padding: 20px;
 }

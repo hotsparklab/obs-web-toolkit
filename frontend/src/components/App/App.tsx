@@ -10,6 +10,7 @@ import { ClientConfigEvent } from './model/ClientConfigEvent';
 import RetroMessageConsole from '../RetroMessageConsole';
 import { RetroMessageConsoleProps } from '../RetroMessageConsole/model/RetroMessageConsoleProps';
 import DisplayMessageStore from '../DisplayMessageStore';
+import TwitchChatStore from '../TwitchChatStore';
 import { DataSource } from '../DisplayMessageStore/model/DataSource';
 import { DisplayMessageCategory } from '../DisplayMessageStore/model/DisplayMessageCategory';
 
@@ -19,7 +20,7 @@ const socket = io(config.SOCKET_URL);
 function App() {
   const [loadingConfig, setLoadingConfig] = useState(true);
   const [epicPlayerEnabled, setEpicPlayerEnabled] = useState(false);
-  const [retroMessageConsoleEnabled, setRetroMessageConsoleEnabled] = useState(false);
+  const [twitchChatClientEnabled, setTwitchChatClientEnabled] = useState(false);
   const [retroMessageConsoleProps, setRetroMessageConsoleProps] = useState<RetroMessageConsoleProps>({
     width: 500,
     top: 100,
@@ -46,15 +47,18 @@ function App() {
 
   useEffect(() => {
     const displayMessageStore = DisplayMessageStore.getInstance();
+    // TODO: Make better. This is just relaying messages for now.
+    // This is also not the best place for it. Make it part of other Twitch stuff.
+    const twitchChatStore = TwitchChatStore.getInstance();
 
     // let server know ready for config
     socket.emit(AppSocketEmit.READY);
 
     // on config received
     socket.on(AppSocketEvent.CLIENT_CONFIG, (config: ClientConfigEvent) => {
-      setEpicPlayerEnabled(get(config, 'epicPlayerEnabled', false));
-      setRetroMessageConsoleEnabled(get(config, 'retroMessageConsole.enabled', false));
+      setEpicPlayerEnabled(get(config, 'epicPlayer', false));
       setRetroMessageConsoleProps(get(config, 'retroMessageConsole.props', {}));
+      setTwitchChatClientEnabled(get(config, 'twitchChatClient', false));
       setLoadingConfig(false);
       displayMessageStore.addMessage({
         message: 'App config received from socket.',
@@ -72,7 +76,7 @@ function App() {
         <EpicPlayer />
       ) }
 
-      { retroMessageConsoleEnabled && (
+      { retroMessageConsoleProps && (
         <RetroMessageConsole {...retroMessageConsoleProps} />
       ) }
 

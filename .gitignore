@@ -111,3 +111,6 @@ src/modules/epic-player/audio/*
 
 #public files e.g. added audio files
 public
+
+# temporary tokens
+tokens.json

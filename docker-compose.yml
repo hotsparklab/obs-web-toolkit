@@ -4,7 +4,10 @@ services:
     privileged: true
     build: .
     ports:
-      - "4001:4001"
+      - "80:4001"
     environment:
       - USB_VOLUME_NAME
-      - AUDIO_PATH
+      - TWITCH_CLIENT_ID
+      - TWITCH_CLIENT_SECRET
+      - TWITCH_CHANNEL
+      - TWITCH_CLIENT_REDIRECT_URI

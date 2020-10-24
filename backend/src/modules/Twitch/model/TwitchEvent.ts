@@ -1,20 +1,4 @@
-/**
- * Enumerator of message category keys used in broadcasting and grouping messages
- */
-export enum DisplayMessageCategory {
-    // Console related messages
-    ERROR = 'error',
-    WARN = 'warn',
-    LOG = 'log',
-    INFO = 'info',
-
-    // EpicPlayer
-    PLAYLIST = 'playlist',
-    PLAY = 'play',
-    PAUSE = 'pause',
-    VOLUME = 'volume',
-
-    // Twitch related messages
+export enum TwitchEvent {
     CONNECTED = 'connected',
     ACTION = 'action',
     AUTHENTICATION_FAILURE = 'authenticationFailure',
