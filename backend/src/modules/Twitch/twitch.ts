@@ -8,6 +8,7 @@ import { ChatClient } from 'twitch-chat-client';
 import { RefreshableAuthProvider, StaticAuthProvider } from 'twitch-auth';
 import { TwitchEvent } from './model/TwitchEvent';
 import { promises as fs } from 'fs';
+import TwitchEventShare from './TwitchEventShare';
 
 /**
  * Subscribe to Twitch events and broadcast as socket.io events for connected apps/hardware.
@@ -19,6 +20,7 @@ export class Twitch extends BaseModule {
     protected config: TwitchConfig;
     protected auth: RefreshableAuthProvider;
     protected client: ChatClient;
+    protected eventShare: TwitchEventShare;
 
     // Is the class connected to Twitch?
     protected connectedToTwitch = false;
@@ -54,6 +56,9 @@ export class Twitch extends BaseModule {
 
         // Attempt to connect with cached refresh token data (if available).
         this.attemptAuthWithLocalData();
+
+        // Share events via socket.io for client(s) and as an event emitter for other server-side functionality.
+        this.eventShare = TwitchEventShare.getInstance();
     }
 
     /**
@@ -221,7 +226,7 @@ export class Twitch extends BaseModule {
          });
         await this.client.connect();
         this.connectedToTwitch = true;
-        this.io.of(this.baseRoute).emit(TwitchEvent.CONNECTED, { 'connected': true });
+        this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.CONNECTED, { 'connected': true });
         this.listenToChatEvents();
     }
 
@@ -231,80 +236,80 @@ export class Twitch extends BaseModule {
     protected listenToChatEvents = () => {
         // Fires when a user sends an action (/me) to a channel.
         this.client.onAction ((channel, user, message, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.ACTION, { channel, user, message, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.ACTION, { channel, user, message, msg });
         });
 
         // Fires when authentication fails.
         this.client.onAuthenticationFailure ((message) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.AUTHENTICATION_FAILURE, { message });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.AUTHENTICATION_FAILURE, { message });
         });
 
         // Fires when a user is permanently banned from a channel.
         this.client.onBan ((channel, user) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.BAN, { channel, user });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.BAN, { channel, user });
         });
 
         // Fires when a user upgrades their bits badge in a channel.
         this.client.onBitsBadgeUpgrade ((channel, user, upgradeInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.BITS_BADGE_UPGRADE, { channel, user, upgradeInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.BITS_BADGE_UPGRADE, { channel, user, upgradeInfo, msg });
         });
 
         // Fires when the chat of a channel is cleared.
         this.client.onChatClear ((channel) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.CHAT_CLEAR, { channel });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.CHAT_CLEAR, { channel });
         });
 
         // Fires when a user pays forward a subscription that was gifted to them to the community.
         this.client.onCommunityPayForward ((channel, user, forwardInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.COMMUNITY_PAY_FORWARD, { channel, user, forwardInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.COMMUNITY_PAY_FORWARD, { channel, user, forwardInfo, msg });
         });
 
         // Fires when a user gifts random subscriptions to the community of a channel.
         this.client.onCommunitySub ((channel, user, subInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.COMMUNITY_SUB, { channel, user, subInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.COMMUNITY_SUB, { channel, user, subInfo, msg });
         });
 
         // Fires when emote-only mode is toggled in a channel.
         this.client.onEmoteOnly ((channel, enabled) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.EMOTE_ONLY, { channel, enabled });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.EMOTE_ONLY, { channel, enabled });
         });
 
         // Fires when followers-only mode is toggled in a channel.
         this.client.onFollowersOnly ((channel, enabled, delay) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.FOLLOWERS_ONLY, { channel, enabled, delay });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.FOLLOWERS_ONLY, { channel, enabled, delay });
         });
 
         // Fires when a user upgrades their gift subscription to a paid subscription in a channel.
         this.client.onGiftPaidUpgrade ((channel, user, subInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.GIFT_PAID_UPGRADE, { channel, user, subInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.GIFT_PAID_UPGRADE, { channel, user, subInfo, msg });
         });
 
         // Fires when a channel hosts another channel.
         this.client.onHost ((channel, target, viewers) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.HOST, { channel, target, viewers });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.HOST, { channel, target, viewers });
         });
 
         // Fires when a channel you're logged in as its owner is being hosted by another channel.
         this.client.onHosted ((channel, byChannel, auto, viewers) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.HOSTED, { channel, byChannel, auto, viewers });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.HOSTED, { channel, byChannel, auto, viewers });
         });
 
         // Fires when Twitch tells you the number of hosts you have remaining in the next half hour for the channel for which you're logged in as owner after hosting a channel.
         this.client.onHostsRemaining ((channel, numberOfHosts) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.HOSTS_REMAINING, { channel, numberOfHosts });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.HOSTS_REMAINING, { channel, numberOfHosts });
         });
 
         // Fires when a user joins a channel.
         // The join/part events are cached by the Twitch chat server and will be batched and sent every 30-60 seconds.
         // Please note that unless you enabled the requestMembershipEvents option, this will only react to your own joins.
         this.client.onJoin ((channel, user) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.JOIN, { channel, user });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.JOIN, { channel, user });
         });
 
         // Message posted in channel
         this.client.onMessage((channel, user, message) => {
             console.log(channel, user, message);
-            this.io.of(this.baseRoute).emit(TwitchEvent.MESSAGE, { channel, user, message });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.MESSAGE, { channel, user, message });
             if (message === '!ping') {
                 this.client.say(channel, 'Pong!');
             }
@@ -312,114 +317,114 @@ export class Twitch extends BaseModule {
 
         // Fires when sending a message fails.
         this.client.onMessageFailed ((channel, reason) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.MESSAGE_FAILED, { channel, reason });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.MESSAGE_FAILED, { channel, reason });
         });
 
         // Fires when a message you tried to send gets rejected by the ratelimiter.
         this.client.onMessageRatelimit ((channel, message) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.MESSAGE_RATE_LIMIT, { channel, message });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.MESSAGE_RATE_LIMIT, { channel, message });
         });
 
         // Fires when a single message is removed from a channel.
         this.client.onMessageRemove ((channel, messageId, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.MESSAGE_REMOVE, { channel, messageId, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.MESSAGE_REMOVE, { channel, messageId, msg });
         });
 
         // Fires when you tried to execute a command you don't have sufficient permission for.
         this.client.onNoPermission ((channel, message) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.NO_PERMISSION, { channel, message });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.NO_PERMISSION, { channel, message });
         });
 
         // Fires when a user leaves ("parts") a channel.
         // The join/part events are cached by the Twitch chat server and will be batched and sent every 30-60 seconds.
         // Please note that unless you enabled the requestMembershipEvents option, this will only react to your own parts.
         this.client.onPart ((channel, user) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.PART, { channel, user });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.PART, { channel, user });
         });
 
         // Fires when a user gifts a Twitch Prime benefit to the channel.
         this.client.onPrimeCommunityGift ((channel, user, subInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.PRIME_COMMUNITY_GIFT, { channel, user, subInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.PRIME_COMMUNITY_GIFT, { channel, user, subInfo, msg });
         });
 
         // Fires when a user upgrades their Prime subscription to a paid subscription in a channel.
         this.client.onPrimePaidUpgrade ((channel, user, subInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.PRIME_PAID_UPGRADE, { channel, user, subInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.PRIME_PAID_UPGRADE, { channel, user, subInfo, msg });
         });
 
         // Fires when R9K mode is toggled in a channel.
         this.client.onR9k ((channel, enabled) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.R9K, { channel, enabled });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.R9K, { channel, enabled });
         });
 
         // Fires when a user raids a channel.
         this.client.onRaid ((channel, user, raidInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.RAID, { channel, user, raidInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.RAID, { channel, user, raidInfo, msg });
         });
 
         // Fires when a user cancels a raid.
         this.client.onRaidCancel ((channel, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.RAID_CANCEL, { channel, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.RAID_CANCEL, { channel, msg });
         });
 
         // Fires when a user resubscribes to a channel.
         this.client.onResub ((channel, user, subInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.RESUB, { channel, user, subInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.RESUB, { channel, user, subInfo, msg });
         });
 
         // Fires when a user gifts rewards during a special event.
         this.client.onRewardGift ((channel, user, rewardGiftInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.REWARD_GIFT, { channel, user, rewardGiftInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.REWARD_GIFT, { channel, user, rewardGiftInfo, msg });
         });
 
         // Fires when a user performs a "ritual" in a channel.
         this.client.onRitual ((channel, user, ritualInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.RITUAL, { channel, user, ritualInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.RITUAL, { channel, user, ritualInfo, msg });
         });
 
         // Fires when slow mode is toggled in a channel.
         this.client.onSlow ((channel, enabled, delay) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.SLOW, { channel, enabled, delay });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.SLOW, { channel, enabled, delay });
         });
 
         // Fires when a user pays forward a subscription that was gifted to them to a specific user.
         this.client.onStandardPayForward ((channel, user, forwardInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.STANDARD_PAY_FORWARD, { channel, user, forwardInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.STANDARD_PAY_FORWARD, { channel, user, forwardInfo, msg });
         });
 
         // Fires when a user subscribes to a channel.
         this.client.onSub ((channel, user, subInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.SUB, { channel, user, subInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.SUB, { channel, user, subInfo, msg });
         });
 
         // Fires when a user extends their subscription using a Sub Token.
         this.client.onSubExtend ((channel, user, subInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.SUB_EXTEND, { channel, user, subInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.SUB_EXTEND, { channel, user, subInfo, msg });
         });
 
         // Fires when a user gifts a subscription to a channel to another user.
         this.client.onSubGift ((channel, user, subInfo, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.SUB_GIFT, { channel, user, subInfo, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.SUB_GIFT, { channel, user, subInfo, msg });
         });
 
         // Fires when sub only mode is toggled in a channel.
         this.client.onSubsOnly ((channel, enabled) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.SUB_ONLY, { channel, enabled });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.SUB_ONLY, { channel, enabled });
         });
 
         // Fires when a user is timed out from a channel.
         this.client.onTimeout ((channel, user, duration) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.TIMEOUT, { channel, user, duration });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.TIMEOUT, { channel, user, duration });
         });
 
         // Fires when host mode is disabled in a channel.
         this.client.onUnhost ((channel) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.UNHOST, { channel });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.UNHOST, { channel });
         });
 
         // Fires when receiving a whisper from another user.
         this.client.onWhisper ((user, message, msg) => {
-            this.io.of(this.baseRoute).emit(TwitchEvent.WHISPER, { user, message, msg });
+            this.eventShare.shareTwitchEvent(this.io.of(this.baseRoute), TwitchEvent.WHISPER, { user, message, msg });
         });
     }
 }

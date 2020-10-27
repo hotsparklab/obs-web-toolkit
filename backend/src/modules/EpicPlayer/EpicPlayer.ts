@@ -6,6 +6,7 @@ import { Playlist } from './model/Playlist';
 import { Song } from './model/Song';
 import { EpicPlayerEvent } from './model/EpicPlayerEvent';
 import { readdirSync } from 'fs';
+import EpicPlayerEventShare from './EpicPlayerEventShare';
 
 /**
  * Epic Player is an epic audio player server.
@@ -54,6 +55,8 @@ export class EpicPlayer extends BaseModule {
     // Currently set to play?
     protected playing: boolean;
 
+    protected eventShare: EpicPlayerEventShare;
+
     constructor(config: EpicPlayerConfig, app: express.Application, router: express.Router, io: SocketIO.Server) {
         super(app, router, io);
 
@@ -79,6 +82,9 @@ export class EpicPlayer extends BaseModule {
 
         // Init namespace
         this.setIoConnections();
+
+        // Share events via socket.io for client(s) and as an event emitter for other server-side functionality.
+        this.eventShare = EpicPlayerEventShare.getInstance();
     }
 
     /**
@@ -145,7 +151,7 @@ export class EpicPlayer extends BaseModule {
                 this.playlist.songs = songs;
             }
 
-            this.io.of(this.baseRoute).emit(EpicPlayerEvent.PLAYLIST, { 'playlist': this.playlist });
+            this.eventShare.shareEpicPlayerEvent(this.io.of(this.baseRoute), EpicPlayerEvent.PLAYLIST, { 'playlist': this.playlist });
             res.send({ response: `now playing: ${playlistId}` }).status(200);
             console.log(`now playing: ${playlistId}`);
         } else {
@@ -180,7 +186,7 @@ export class EpicPlayer extends BaseModule {
         const playing: boolean = get(req, 'body.play', null);
         if (playing !== null) {
             this.playing = playing;
-            this.io.of(this.baseRoute).emit(EpicPlayerEvent.PLAY, { 'play': this.playing });
+            this.eventShare.shareEpicPlayerEvent(this.io.of(this.baseRoute), EpicPlayerEvent.PLAY, { 'play': this.playing });
             res.send({ response: `playing: ${playing}` }).status(200);
         } else {
             res.send({ response: `didn't receive a 'play' value of true or false` }).status(400);
@@ -194,7 +200,7 @@ export class EpicPlayer extends BaseModule {
         const volume: number = get(req, 'body.volume', null);
         if (volume && volume >= 0.0 && volume <= 1.0) {
             this.volume = volume;
-            this.io.of(this.baseRoute).emit(EpicPlayerEvent.VOLUME, { 'volume': this.volume});
+            this.eventShare.shareEpicPlayerEvent(this.io.of(this.baseRoute), EpicPlayerEvent.VOLUME, { 'volume': this.volume});
             res.send({ response: `volume set to: ${volume}` }).status(200);
         } else {
             res.send({ response: `didn't receive a 'volume' value between 0 and 1: ${volume}` }).status(400);
